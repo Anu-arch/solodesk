@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SoloDesk – the back office for one person</title>
+<style>
+:root{--bg:#f6f4fb;--ink:#1d1730;--mut:#6b6580;--card:#fff;--line:#e4e0ef;--acc:#6d28d9;--onacc:#fff;--soft:#ede7fb;--side:#1d1730;--bad:#b42318;--good:#18794e;--warn:#b54708}
+@media(prefers-color-scheme:dark){:root{--bg:#120e1c;--ink:#efeaff;--mut:#a39bbd;--card:#1e1830;--line:#352c4f;--acc:#a78bfa;--onacc:#14101f;--soft:#2c2250;--side:#0c0914;--bad:#f97066;--good:#4ade80;--warn:#fbbf24}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif;display:flex;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+aside{width:210px;flex:none;background:var(--side);color:#efeaff;padding:22px 14px;position:sticky;top:0;height:100vh}
+.brand{font:700 1.5rem Georgia,serif;margin:0 8px 24px}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{display:flex;align-items:center;gap:10px;border:0;background:none;color:#c9c0e6;padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left}
+nav button i{font-style:normal;width:20px;text-align:center}
+nav button[aria-current=true]{background:#6d28d9;color:#fff}
+.app{flex:1;min-width:0;max-width:900px;margin:0 auto;padding:20px 20px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+h1{font:700 1.5rem/1.1 Georgia,serif;margin:0}
+.biz{background:var(--soft);border:0;color:var(--acc);cursor:pointer;padding:6px 14px;border-radius:999px;font-weight:600}
+.cmd{position:sticky;top:8px;z-index:5;display:flex;gap:8px;background:var(--side);padding:10px;border-radius:16px;box-shadow:0 6px 24px #6d28d955}
+.cmd input{flex:1;min-width:0;border:0;background:transparent;color:#fff;font-size:1.05rem;padding:8px}
+.cmd input::placeholder{color:#a39bbd}
+.cmd button{background:#a78bfa;color:#14101f;border:0;border-radius:10px;padding:8px 18px;font-weight:700;cursor:pointer}
+.hint{color:var(--mut);font-size:.85rem;margin:8px 4px 18px}
+.hero{background:var(--acc);color:var(--onacc);border-radius:18px;padding:22px;margin-bottom:12px}
+.hero b{display:block;font:700 2.6rem/1.1 Georgia,serif}.hero small{opacity:.85}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:1.05rem;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat span{color:var(--mut);font-size:.85rem}.stat b{display:block;font-size:1.35rem}
+.bad{color:var(--bad)}.good{color:var(--good)}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row small{color:var(--mut);display:block}
+.who{display:flex;gap:12px;align-items:center}
+.av{width:38px;height:38px;border-radius:50%;background:var(--soft);color:var(--acc);display:grid;place-items:center;font-weight:700;flex:none}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--card);padding:6px 12px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.p{background:var(--acc);color:var(--onacc);border-color:var(--acc);font-weight:600}
+.tag{font-size:.78rem;padding:2px 10px;border-radius:999px;border:1px solid currentColor}
+.t-paid{color:var(--good)}.t-overdue{color:var(--bad)}.t-pending{color:var(--warn)}
+form.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end}
+label{font-size:.85rem;color:var(--mut);display:block}
+input,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.empty{color:var(--mut);padding:4px 0}
+#toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+#toast.on{opacity:1}
+svg text{fill:var(--mut);font-size:10px}
+#print{display:none}
+@media(max-width:720px){body{display:block}aside{position:fixed;top:auto;bottom:0;left:0;right:0;width:auto;height:auto;padding:6px;z-index:8}.brand{display:none}nav{flex-direction:row}nav button{flex:1;flex-direction:column;gap:0;padding:6px 2px;font-size:.72rem;text-align:center}.app{padding-bottom:100px}.hero b{font-size:2.1rem}}
+@media print{aside,.app,#toast{display:none}body{display:block;background:#fff;color:#000}#print{display:block;padding:30px;font-family:Georgia,serif;color:#000}#print table{width:100%;border-collapse:collapse;margin:20px 0}#print td,#print th{border-bottom:1px solid #999;padding:8px;text-align:left}}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<aside><div class="brand">SoloDesk</div><nav id="nav"></nav></aside>
+<div class="app">
+<header><h1>Your back office</h1><button class="biz" id="biz" onclick="setBiz()"></button></header>
+<form class="cmd" onsubmit="runCmd(event)" role="search">
+<input id="cmd" aria-label="Quick command" placeholder="invoice Rahul 5000 for logo design" autocomplete="off">
+<button>Run</button></form>
+<p class="hint">Also try: <i>expense 800 domain renewal</i> or <i>paid Rahul</i></p>
+<main id="main"></main>
+</div>
+<div id="toast" role="status"></div>
+<div id="print"></div>
+<script>
+const K='solodesk.v1';
+let db={clients:[],invoices:[],expenses:[],deadlines:[],biz:{name:'',upi:''}},tab='home';
+try{const s=localStorage.getItem(K);if(s)db=Object.assign(db,JSON.parse(s))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}};
+const $=s=>document.querySelector(s);
+const p2=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const today=()=>iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()+n);return iso(d)};
+const daysTo=s=>Math.round((new Date(s+'T00:00')-new Date(today()+'T00:00'))/864e5);
+const inr=n=>'₹'+Number(n).toLocaleString('en-IN');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const sum=a=>a.reduce((t,x)=>t+Number(x.amount),0);
+const status=i=>i.paid?'paid':(i.due<today()?'overdue':'pending');
+const findClient=n=>db.clients.find(c=>c.name.toLowerCase()===String(n).trim().toLowerCase());
+function toast(m){const t=$('#toast');t.textContent=m;t.className='on';clearTimeout(toast.t);toast.t=setTimeout(()=>t.className='',2500)}
+function ensureClient(n,extra){let c=findClient(n);if(!c){c=Object.assign({id:uid(),name:n.trim(),phone:'',email:''},extra);db.clients.push(c)}return c}
+function addInvoice(name,amount,desc,days){
+  ensureClient(name);const c=findClient(name);const n=db.invoices.length+1;
+  const d=today();
+  db.invoices.push({id:uid(),no:'INV-'+String(n).padStart(3,'0'),client:c.name,amount:Number(amount),desc:desc||'Services',date:d,due:addDays(d,days||15),paid:false});
+  save();
+}
+function setBiz(){
+  const n=prompt('Your business name (shown on invoices):',db.biz.name);if(n===null)return;
+  const u=prompt('Your UPI ID for payments (optional):',db.biz.upi);
+  db.biz={name:n.trim(),upi:(u||'').trim()};save();render();
+}
+function runCmd(e){
+  e.preventDefault();const v=$('#cmd').value.trim();if(!v)return;
+  let m;
+  if(m=v.match(/^invoice\s+(.+?)\s+(?:₹|rs\.?\s?)?(\d[\d,]*)(?:\s+for\s+(.+))?$/i)){
+    addInvoice(m[1],m[2].replace(/,/g,''),m[3]);tab='invoices';toast('Invoice created for '+m[1]);
+  }else if(m=v.match(/^expense\s+(?:₹|rs\.?\s?)?(\d[\d,]*)\s*(?:on|for)?\s*(.*)$/i)){
+    db.expenses.push({id:uid(),amount:Number(m[1].replace(/,/g,'')),cat:'Other',note:m[2]||'Expense',date:today()});save();tab='expenses';toast('Expense added');
+  }else if(m=v.match(/^paid\s+(.+)$/i)){
+    const i=db.invoices.filter(x=>!x.paid&&x.client.toLowerCase()===m[1].trim().toLowerCase()).sort((a,b)=>a.date<b.date?-1:1)[0];
+    if(!i){toast('No unpaid invoice found for '+m[1]);return}
+    i.paid=true;i.paidOn=today();save();tab='invoices';toast(i.no+' marked paid');
+  }else{toast('Try: invoice Rahul 5000 for logo design');return}
+  $('#cmd').value='';render();
+}
+function markPaid(id){const i=db.invoices.find(x=>x.id==id);i.paid=true;i.paidOn=today();save();toast(i.no+' marked paid');render()}
+function del(list,id){if(!confirm('Delete this entry?'))return;db[list]=db[list].filter(x=>x.id!=id);save();render()}
+function remind(id){
+  const i=db.invoices.find(x=>x.id==id),c=findClient(i.client)||{};
+  const msg='Hi '+i.client+', a gentle reminder that invoice '+i.no+' for '+inr(i.amount)+' ('+i.desc+') '+(i.due<today()?'was due on ':'is due on ')+i.due+'.'+(db.biz.upi?' You can pay via UPI: '+db.biz.upi+'.':'')+' Thank you!';
+  const ph=(c.phone||'').replace(/\D/g,'');
+  if(ph){window.open('https://wa.me/'+(ph.length==10?'91'+ph:ph)+'?text='+encodeURIComponent(msg),'_blank')}
+  else if(navigator.clipboard){navigator.clipboard.writeText(msg).then(()=>toast('Reminder copied. Add a phone number to open WhatsApp directly.'),()=>prompt('Copy this reminder:',msg))}
+  else prompt('Copy this reminder:',msg);
+}
+function printInv(id){
+  const i=db.invoices.find(x=>x.id==id),c=findClient(i.client)||{};
+  $('#print').innerHTML='<h1>'+esc(db.biz.name||'Invoice')+'</h1><p><b>'+i.no+'</b><br>Date: '+i.date+'<br>Due: '+i.due+'</p><p><b>Bill to:</b><br>'+esc(i.client)+'<br>'+esc(c.email)+' '+esc(c.phone)+'</p><table><tr><th>Description</th><th>Amount</th></tr><tr><td>'+esc(i.desc)+'</td><td>'+inr(i.amount)+'</td></tr><tr><th>Total</th><th>'+inr(i.amount)+'</th></tr></table><p>'+(db.biz.upi?'Pay via UPI: '+esc(db.biz.upi):'')+'</p><p>'+(i.paid?'PAID on '+i.paidOn:'')+'</p>';
+  window.print();
+}
+function nextDay(day){const n=new Date();let t=new Date(n.getFullYear(),n.getMonth(),day);if(iso(t)<today())t=new Date(n.getFullYear(),n.getMonth()+1,day);return iso(t)}
+function deadlines(){
+  const auto=[{title:'GSTR-1 filing (if GST-registered)',date:nextDay(11)},{title:'GSTR-3B filing (if GST-registered)',date:nextDay(20)}];
+  return auto.concat(db.deadlines).sort((a,b)=>a.date<b.date?-1:1);
+}
+const when=d=>{const n=daysTo(d);return n<0?Math.abs(n)+' days ago':n==0?'today':n==1?'tomorrow':'in '+n+' days'};
+
+function home(){
+  const unpaid=db.invoices.filter(i=>!i.paid),over=unpaid.filter(i=>status(i)=='overdue');
+  const mk=today().slice(0,7);
+  const inc=sum(db.invoices.filter(i=>i.paid&&(i.paidOn||i.date).slice(0,7)==mk));
+  const exp=sum(db.expenses.filter(e=>e.date.slice(0,7)==mk));
+  const now=new Date(),ms=[];
+  for(let k=5;k>=0;k--){const d=new Date(now.getFullYear(),now.getMonth()-k,1),key=iso(d).slice(0,7);
+    ms.push({l:d.toLocaleString('en',{month:'short'}),i:sum(db.invoices.filter(x=>x.paid&&(x.paidOn||x.date).slice(0,7)==key)),e:sum(db.expenses.filter(x=>x.date.slice(0,7)==key))})}
+  const mx=Math.max(1,...ms.map(m=>Math.max(m.i,m.e)));
+  const bars=ms.map((m,k)=>{const x=20+k*56,hi=m.i/mx*100,he=m.e/mx*100;
+    return '<rect x="'+x+'" y="'+(110-hi)+'" width="20" height="'+hi+'" fill="var(--acc)"/><rect x="'+(x+22)+'" y="'+(110-he)+'" width="20" height="'+he+'" fill="var(--mut)" opacity=".6"/><text x="'+(x+10)+'" y="126">'+m.l+'</text>'}).join('');
+  const dl=deadlines().slice(0,3).map(d=>'<div class="row"><span>'+esc(d.title)+'</span><small>'+when(d.date)+' ('+d.date+')</small></div>').join('');
+  return (db.invoices.length||db.clients.length?'':'<div class="card"><h2>Welcome to SoloDesk</h2><p class="empty">Type a command above to start, or fill the app with sample data to see how it works.</p><button class="btn p" onclick="loadDemo()">Load sample data</button></div>')+'<div class="hero"><span>You are owed</span><b>'+inr(sum(unpaid))+'</b><small>'+(over.length?over.length+' overdue · ':'')+unpaid.length+' unpaid invoice'+(unpaid.length==1?'':'s')+'</small></div><div class="grid"><div class="stat"><span>Overdue invoices</span><b class="'+(over.length?'bad':'')+'">'+over.length+'</b></div><div class="stat"><span>Income this month</span><b class="good">'+inr(inc)+'</b></div><div class="stat"><span>Expenses this month</span><b>'+inr(exp)+'</b></div><div class="stat"><span>Profit this month</span><b class="'+(inc-exp<0?'bad':'good')+'">'+inr(inc-exp)+'</b></div></div>'
+  +'<div class="card"><h2>Last 6 months: income (purple) and expenses (grey)</h2><svg viewBox="0 0 360 134" width="100%" role="img" aria-label="Income and expenses by month">'+bars+'</svg></div>'
+  +'<div class="card"><h2>Next deadlines</h2>'+dl+'</div>'
+  +'<div class="card"><h2>Your data</h2><p class="empty">Everything is saved in this browser only. Export a backup now and then.</p><div class="acts"><button class="btn" onclick="exportData()">Export backup</button><button class="btn" onclick="loadDemo()">Load sample data</button><button class="btn" onclick="resetAll()">Clear all data</button><label class="btn" style="color:var(--ink)">Import backup<input type="file" accept=".json" onchange="importData(event)" hidden></label></div></div>';
+}
+function invoices(){
+  const rows=db.invoices.slice().sort((a,b)=>a.date<b.date?1:-1).map(i=>{const s=status(i);
+    return '<div class="row"><div class="who"><span class="av">'+esc((i.client[0]||'?').toUpperCase())+'</span><div><b>'+i.no+'</b> '+esc(i.client)+'<small>'+esc(i.desc)+' · due '+i.due+'</small></div></div><div class="acts"><b>'+inr(i.amount)+'</b><span class="tag t-'+s+'">'+s+'</span>'
+    +(i.paid?'':'<button class="btn" onclick="markPaid(\''+i.id+'\')">Mark paid</button><button class="btn" onclick="remind(\''+i.id+'\')">Remind</button>')
+    +'<button class="btn" onclick="printInv(\''+i.id+'\')">Print / PDF</button><button class="btn" aria-label="Delete '+i.no+'" onclick="del(\'invoices\',\''+i.id+'\')">Delete</button></div></div>'}).join('');
+  return '<div class="card"><h2>New invoice</h2><form class="f" onsubmit="newInv(event)"><div><label for="ic">Client</label><input id="ic" list="cl" required><datalist id="cl">'+db.clients.map(c=>'<option value="'+esc(c.name)+'">').join('')+'</datalist></div><div><label for="ia">Amount (₹)</label><input id="ia" type="number" min="1" required></div><div><label for="id">What for</label><input id="id"></div><div><label for="iw">Due in</label><select id="iw"><option value="7">7 days</option><option value="15" selected>15 days</option><option value="30">30 days</option></select></div><button class="btn p">Create invoice</button></form></div>'
+  +'<div class="card"><h2>All invoices</h2>'+(rows||'<p class="empty">No invoices yet. Create your first one above.</p>')+'</div>';
+}
+function newInv(e){e.preventDefault();addInvoice($('#ic').value,$('#ia').value,$('#id').value,Number($('#iw').value));toast('Invoice created');render()}
+function clients(){
+  const rows=db.clients.map(c=>{const mine=db.invoices.filter(i=>i.client==c.name);
+    return '<div class="row"><div class="who"><span class="av">'+esc((c.name[0]||'?').toUpperCase())+'</span><div><b>'+esc(c.name)+'</b><small>'+esc(c.phone)+' '+esc(c.email)+'</small></div></div><div class="acts"><span>Billed '+inr(sum(mine))+'</span><span class="bad">Owes '+inr(sum(mine.filter(i=>!i.paid)))+'</span><button class="btn" aria-label="Delete '+esc(c.name)+'" onclick="del(\'clients\',\''+c.id+'\')">Delete</button></div></div>'}).join('');
+  return '<div class="card"><h2>Add client</h2><form class="f" onsubmit="newCl(event)"><div><label for="cn">Name</label><input id="cn" required></div><div><label for="cp">Phone (for WhatsApp reminders)</label><input id="cp" type="tel"></div><div><label for="ce">Email</label><input id="ce" type="email"></div><button class="btn p">Save client</button></form></div><div class="card"><h2>Clients</h2>'+(rows||'<p class="empty">No clients yet.</p>')+'</div>';
+}
+function newCl(e){e.preventDefault();const n=$('#cn').value;if(findClient(n)){toast('Client already exists');return}ensureClient(n,{phone:$('#cp').value,email:$('#ce').value});save();toast('Client saved');render()}
+function expenses(){
+  const cats=['Software','Travel','Food','Rent','Marketing','Other'];
+  const tot=cats.map(c=>[c,sum(db.expenses.filter(e=>e.cat==c))]).filter(x=>x[1]).map(x=>x[0]+' '+inr(x[1])).join(' · ');
+  const rows=db.expenses.slice().sort((a,b)=>a.date<b.date?1:-1).map(e=>'<div class="row"><div>'+esc(e.note)+'<small>'+esc(e.cat)+' · '+e.date+'</small></div><div class="acts"><b>'+inr(e.amount)+'</b><button class="btn" aria-label="Delete expense" onclick="del(\'expenses\',\''+e.id+'\')">Delete</button></div></div>').join('');
+  return '<div class="card"><h2>Add expense</h2><form class="f" onsubmit="newEx(event)"><div><label for="xa">Amount (₹)</label><input id="xa" type="number" min="1" required></div><div><label for="xc">Category</label><select id="xc">'+cats.map(c=>'<option>'+c+'</option>').join('')+'</select></div><div><label for="xn">Note</label><input id="xn"></div><div><label for="xd">Date</label><input id="xd" type="date" value="'+today()+'" required></div><button class="btn p">Add expense</button></form></div><div class="card"><h2>Expenses</h2>'+(tot?'<p class="empty">'+tot+'</p>':'')+(rows||'<p class="empty">No expenses yet.</p>')+'</div>';
+}
+function newEx(e){e.preventDefault();db.expenses.push({id:uid(),amount:Number($('#xa').value),cat:$('#xc').value,note:$('#xn').value||$('#xc').value,date:$('#xd').value});save();toast('Expense added');render()}
+function dues(){
+  const rows=deadlines().map(d=>'<div class="row"><div>'+esc(d.title)+'<small>'+d.date+'</small></div><div class="acts"><span class="'+(daysTo(d.date)<0?'bad':'')+'">'+when(d.date)+'</span>'+(d.id?'<button class="btn" aria-label="Delete deadline" onclick="del(\'deadlines\',\''+d.id+'\')">Delete</button>':'')+'</div></div>').join('');
+  return '<div class="card"><h2>Add deadline</h2><form class="f" onsubmit="newDl(event)"><div><label for="dt">What is due</label><input id="dt" required></div><div><label for="dd">Date</label><input id="dd" type="date" required></div><button class="btn p">Add deadline</button></form></div><div class="card"><h2>Deadlines</h2>'+rows+'</div>';
+}
+function newDl(e){e.preventDefault();db.deadlines.push({id:uid(),title:$('#dt').value,date:$('#dd').value});save();toast('Deadline added');render()}
+function resetAll(){if(!confirm('Delete all data in SoloDesk?'))return;db={clients:[],invoices:[],expenses:[],deadlines:[],biz:{name:'',upi:''}};save();render()}
+function loadDemo(){
+ const t=today(),d=n=>addDays(t,n);
+ db.biz={name:'Anushka Studio',upi:'anushka@upi'};
+ [['Rahul Sharma','9876543210','rahul@mail.com'],['Priya Kulkarni','9822012345','priya@mail.com'],['Mehta Traders','9890098900','']].forEach(c=>{if(!findClient(c[0]))ensureClient(c[0],{phone:c[1],email:c[2]})});
+ [['Rahul Sharma',12000,'Logo and brand kit',-75,-60],['Priya Kulkarni',8000,'Website landing page',-50,-40],['Mehta Traders',15000,'Product catalogue design',-30,-20],['Rahul Sharma',5000,'Social media pack',-25,null],['Priya Kulkarni',9500,'Website maintenance',-6,null],['Mehta Traders',6000,'Flyer design',0,null]].forEach(x=>db.invoices.push({id:uid(),no:'INV-'+String(db.invoices.length+1).padStart(3,'0'),client:x[0],amount:x[1],desc:x[2],date:d(x[3]),due:d(x[3]+15),paid:x[4]!==null,paidOn:x[4]!==null?d(x[4]):undefined}));
+ [[3500,'Software','Design tool subscription',-45],[1200,'Food','Client meeting',-20],[800,'Software','Domain renewal',-8],[2500,'Marketing','Social ads',-3]].forEach(e=>db.expenses.push({id:uid(),amount:e[0],cat:e[1],note:e[2],date:d(e[3])}));
+ db.deadlines.push({id:uid(),title:'Renew hosting',date:d(9)});
+ save();toast('Sample data loaded');render();
+}
+function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db)],{type:'application/json'}));a.download='solodesk-backup.json';a.click()}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{db=Object.assign(db,JSON.parse(r.result));save();toast('Backup restored');render()}catch(x){toast('That file is not a valid backup')}};r.readAsText(f)}
+
+const tabs={home:['Home',home],invoices:['Invoices',invoices],clients:['Clients',clients],expenses:['Expenses',expenses],dues:['Deadlines',dues]};
+const ic={home:'▦',invoices:'▤',clients:'☺',expenses:'₹',dues:'◷'};
+function render(){
+  $('#biz').textContent=db.biz.name||'Set business name';
+  $('#nav').innerHTML=Object.keys(tabs).map(k=>'<button aria-current="'+(k==tab)+'" onclick="tab=\''+k+'\';render()"><i>'+ic[k]+'</i>'+tabs[k][0]+'</button>').join('');
+  $('#main').innerHTML=tabs[tab][1]();
+}
+render();
+</script>
+</body>
+</html>
